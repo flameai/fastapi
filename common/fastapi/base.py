@@ -25,10 +25,10 @@ class AppEventProvidedComponent(AppBaseComponent):
         app.on_event("startup")(partial(self.startup, app))
         app.on_event("shutdown")(partial(self.shutdown, app))
 
-    def startup(self, app) -> None:
+    async def startup(self, app) -> None:
         raise NotImplementedError
 
-    def shutdown(self, app) -> None:
+    async def shutdown(self, app) -> None:
         raise NotImplementedError
 
 
