@@ -41,6 +41,8 @@ class ComponentProvidedApp(FastAPI):
 
     def __init__(self, *a, **kw) -> None:
         super().__init__(*a, **kw)
+        if not self.component_classes:
+            return  # Ранний выход, однако, джентльмены! ))
         for component_class in self.component_classes:
             component_instance = component_class()
             component_instance.register(self)
