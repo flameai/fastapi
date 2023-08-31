@@ -6,6 +6,8 @@ setup(
     version="v1.0.0",
     author="Alexander Andryukov",
     author_email='andryukov@gmail.com',
-    install_requires=['fastapi==0.103.0']
-
+    install_requires=[
+        'fastapi==0.103.0',
+        'uvicorn==0.23.2',
+    ]
 )
