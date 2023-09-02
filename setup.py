@@ -9,5 +9,6 @@ setup(
     install_requires=[
         'fastapi==0.103.0',
         'uvicorn==0.23.2',
+        'fastapi-utils==0.2.1'
     ]
 )
