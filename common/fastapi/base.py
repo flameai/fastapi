@@ -37,6 +37,7 @@ class ComponentProvidedApp(FastAPI):
     Приложение со списком компонентов, используемых в нем.
     Демонстрация Композиции и использования ковариантных типов
     """
+
     component_classes: Collection[Type[AppBaseComponent]] = None
 
     def __init__(self, *a, **kw) -> None:
