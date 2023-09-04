@@ -21,7 +21,10 @@ class App(ComponentProvidedApp):
         "hash_db": None,  # <- Здесь будем хранить фабрику получения методов хэша (Redis или Cassandra)
     }
 
-    def run(self, app: Optional[str] = None, log_config: Optional[dict] = None):
+    def include_view(self, view) -> None:
+        pass
+
+    def run(self, app: Optional[str] = None, log_config: Optional[dict] = None) -> None:
         app = app or self
         log_config = log_config or LOGGING_CONFIG
         uvicorn_run(
