@@ -1,5 +1,6 @@
 from typing import Optional
 
+from fastapi.routing import APIRouter
 from uvicorn import run as uvicorn_run
 from uvicorn.config import LOGGING_CONFIG
 
@@ -9,20 +10,21 @@ from common.fastapi.settings import (
     APP_HOST,
     APP_WORKERS,
 )
+from common.fastapi.base import ComponentCategoryGetterEnum
 
 
 class App(ComponentProvidedApp):
     """
     Класс приложения с настройками, общими для всех проектов
     """
+    # Используем Registry для IoC целей.
+    config = {key: None for key in ComponentCategoryGetterEnum}
 
-    config = {  # Используем Registry для IoC целей.
-        "sql_db": None,  # <- Здесь будет храниться AsyncSession class используемой реляционной БД
-        "hash_db": None,  # <- Здесь будем хранить фабрику получения методов хэша (Redis или Cassandra)
-    }
+    def register_router(self, router: APIRouter) -> None:
+        """
+        Зарегистрирует роутер в приложении и проверит все вью в нем на соответствие компонентам сервиса
+        """
 
-    def include_view(self, view) -> None:
-        pass
 
     def run(self, app: Optional[str] = None, log_config: Optional[dict] = None) -> None:
         app = app or self

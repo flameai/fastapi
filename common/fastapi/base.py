@@ -1,7 +1,14 @@
-from typing import Collection, Type
+from typing import Collection, Type, Sequence
 from functools import partial
+from enum import Enum
 
 from fastapi import FastAPI
+
+
+class ComponentCategoryGetterEnum(Enum):
+    RelationalDB = "RelationalDB"
+    NoSQLDB = "NoSQLDB"
+    QueueBroker = "QueueBroker"
 
 
 class AppBaseComponent:
@@ -41,9 +48,11 @@ class ComponentProvidedApp(FastAPI):
     component_classes: Collection[Type[AppBaseComponent]] = None
 
     def __init__(self, *a, **kw) -> None:
+
         super().__init__(*a, **kw)
-        if not self.component_classes:
-            return  # Ранний выход, однако, джентльмены! ))
+        self.components = []
+        self.component_classes = self.component_classes or []
         for component_class in self.component_classes:
             component_instance = component_class()
             component_instance.register(self)
+            self.components.append(component_instance)
