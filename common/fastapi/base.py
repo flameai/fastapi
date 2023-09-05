@@ -50,9 +50,7 @@ class ComponentProvidedApp(FastAPI):
     def __init__(self, *a, **kw) -> None:
 
         super().__init__(*a, **kw)
-        self.components = []
-        self.component_classes = self.component_classes or []
+        self.component_classes = set(self.component_classes) or []
         for component_class in self.component_classes:
             component_instance = component_class()
             component_instance.register(self)
-            self.components.append(component_instance)
