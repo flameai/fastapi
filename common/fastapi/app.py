@@ -10,21 +10,18 @@ from common.fastapi.settings import (
     APP_HOST,
     APP_WORKERS,
 )
-from common.fastapi.base import ComponentCategoryGetterEnum
 
 
 class App(ComponentProvidedApp):
     """
     Класс приложения с настройками, общими для всех проектов
     """
-    # Используем Registry для IoC целей.
-    config = {key: None for key in ComponentCategoryGetterEnum}
 
     def register_router(self, router: APIRouter) -> None:
         """
-        Зарегистрирует роутер в приложении и проверит все вью в нем на соответствие компонентам сервиса
+        Зарегистрирует роутер в приложении
         """
-
+        self.include_router(router)
 
     def run(self, app: Optional[str] = None, log_config: Optional[dict] = None) -> None:
         app = app or self

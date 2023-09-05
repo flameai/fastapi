@@ -1,14 +1,8 @@
 from typing import Type, Sequence
 from functools import partial
-from enum import Enum
 
 from fastapi import FastAPI
 
-
-class ComponentCategoryGetterEnum(Enum):
-    RelationalDB = "RelationalDB"
-    NoSQLDB = "NoSQLDB"
-    QueueBroker = "QueueBroker"
 
 
 class AppBaseComponent:
