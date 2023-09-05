@@ -1,7 +1,7 @@
 from typing import Any
 from enum import Enum
 
-from common.fastapi.exceptions import get_exception_for_component
+from common.fastapi.exceptions import NotExistingNoSQLDatabaseSettings, NotExistingRelationalDatabaseSettings
 
 
 class ComponentCategoryGetterEnum(Enum):
@@ -17,10 +17,25 @@ class AppConfig:
 
 def get_component(component: ComponentCategoryGetterEnum) -> Any:
     """
-    Вернет компонент, либо исключение, если таковой не настроен в приложении
+    Вернет функцию получения компонента, либо исключение, если таковой не настроен в приложении
     """
+
+    def _get_component(_component):
+        return _component
+
     if AppConfig[component] is None:
         exception = get_exception_for_component(component)
         raise exception
 
-    return AppConfig[component]
+    return _get_component
+
+
+exceptions_mapping = {
+    ComponentCategoryGetterEnum.RelationalDB: NotExistingRelationalDatabaseSettings,
+    ComponentCategoryGetterEnum.NoSQLDB: NotExistingNoSQLDatabaseSettings
+}
+
+
+def get_exception_for_component(component: ComponentCategoryGetterEnum):
+    return exceptions_mapping[component] if component in exceptions_mapping else Exception(
+        f"Cant get component {component} from application.")
