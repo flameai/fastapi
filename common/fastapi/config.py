@@ -23,7 +23,7 @@ def get_component(component: ComponentCategoryGetterEnum) -> Any:
     def _get_component(_component):
         return _component
 
-    if AppConfig[component] is None:
+    if AppConfig.component_category_getters[component] is None:
         exception = get_exception_for_component(component)
         raise exception
 
