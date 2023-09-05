@@ -1,4 +1,4 @@
-from typing import Collection, Type, Sequence
+from typing import Type, Sequence
 from functools import partial
 from enum import Enum
 
@@ -45,7 +45,7 @@ class ComponentProvidedApp(FastAPI):
     Демонстрация Композиции и использования ковариантных типов
     """
 
-    component_classes: Collection[Type[AppBaseComponent]] = None
+    component_classes: Sequence[Type[AppBaseComponent]] = None
 
     def __init__(self, *a, **kw) -> None:
 
