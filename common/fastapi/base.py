@@ -1,15 +1,11 @@
-from typing import Type, Sequence
 from functools import partial
-
-from fastapi import FastAPI
-
 
 
 class AppBaseComponent:
     """
     Компонент приложения. При инстанцировании приложения
-    будет зарегистрирован и композирован в нем.
-    Демонстрация Композиции ООП
+    будет зарегистрирован в registry.
+    Демонстрация Композиции ООП и использования паттерна Registry
     """
 
     def register(self, app) -> None:
@@ -31,20 +27,3 @@ class AppEventProvidedComponent(AppBaseComponent):
 
     async def shutdown(self, app) -> None:
         raise NotImplementedError
-
-
-class ComponentProvidedApp(FastAPI):
-    """
-    Приложение со списком компонентов, используемых в нем.
-    Демонстрация Композиции и использования ковариантных типов
-    """
-
-    component_classes: Sequence[Type[AppBaseComponent]] = None
-
-    def __init__(self, *a, **kw) -> None:
-
-        super().__init__(*a, **kw)
-        self.component_classes = set(self.component_classes) or []
-        for component_class in self.component_classes:
-            component_instance = component_class()
-            component_instance.register(self)

@@ -1,41 +1,26 @@
-from typing import Any
-from enum import Enum
-
-from common.fastapi.exceptions import NotExistingNoSQLDatabaseSettings, NotExistingRelationalDatabaseSettings
+from typing import Type
+from common.fastapi.base import AppBaseComponent
 
 
-class ComponentCategoryGetterEnum(Enum):
-    RelationalDB = "RelationalDB"
-    NoSQLDB = "NoSQLDB"
-    QueueBroker = "QueueBroker"
+def init_config():
+    Config.init()
 
 
-class AppConfig:
-    # Используем Registry для IoC целей.
-    component_category_getters = {key: None for key in ComponentCategoryGetterEnum}
-
-
-def get_component(component: ComponentCategoryGetterEnum) -> Any:
+class Config:
     """
-    Вернет функцию получения компонента, либо исключение, если таковой не настроен в приложении
+    Класс-синглтон для настройки нашего приложения
     """
 
-    def _get_component(_component):
-        return _component
+    is_initialized = False
+    components_classes = []
 
-    if AppConfig.component_category_getters[component] is None:
-        exception = get_exception_for_component(component)
-        raise exception
+    @classmethod
+    def init(cls):
+        if cls.is_initialized:
+            return
+        for component_class in set(cls.components_classes):
+            component_class()
 
-    return _get_component
-
-
-exceptions_mapping = {
-    ComponentCategoryGetterEnum.RelationalDB: NotExistingRelationalDatabaseSettings,
-    ComponentCategoryGetterEnum.NoSQLDB: NotExistingNoSQLDatabaseSettings
-}
-
-
-def get_exception_for_component(component: ComponentCategoryGetterEnum):
-    return exceptions_mapping[component] if component in exceptions_mapping else Exception(
-        f"Cant get component {component} from application.")
+    @classmethod
+    def add_component_class(cls, component_class: Type[AppBaseComponent]):
+        cls.components_classes.append(component_class)

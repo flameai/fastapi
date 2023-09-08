@@ -8,7 +8,7 @@ load_dotenv()
 class FastAPIAppSettings(EnvironSettings):
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
-    APP_WORKERS: int = None
+    APP_WORKERS: int = 1
     APP_PROTO: str = "http"
 
 
