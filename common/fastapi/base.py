@@ -1,29 +1,36 @@
-from functools import partial
+from typing import Optional
+
+from fastapi import FastAPI
+
+from common.fastapi.registry import ComponentCategoryEnum
 
 
-class AppBaseComponent:
+class SingletonMeta(type):
+    instances = {}
+
+    def __call__(self, *a, **kw):
+        if self.__class__ not in self.instances:
+            self.instances[self.__class__] = super().__call__(*a, **kw)
+
+        return self.instances[self.__class__]
+
+
+class AppBaseComponent(metaclass=SingletonMeta):
+    CATEGORY: ComponentCategoryEnum = None
+
     """
-    Компонент приложения. При инстанцировании приложения
-    будет зарегистрирован в registry.
-    Демонстрация Композиции ООП и использования паттерна Registry
+    Component with startup and shutdown implemented hooks.
+    Pay attention we use DIP principle here from SOLID.
+    Let's make code bit less bounded by using startup
+    and shutdown interfaces.
     """
 
-    def register(self, app) -> None:
-        raise NotImplementedError
+    def register_app_hooks(self, app: FastAPI) -> None:
+        app.on_event("startup")(self.startup)
+        app.on_event("shutdown")(self.shutdown)
 
+    async def startup(self) -> None:
+        pass
 
-class AppEventProvidedComponent(AppBaseComponent):
-    """
-    Компонент приложения, имплементирующий методы перед стартом и остановкой приложения.
-    Для демонстрации наследования и полиморфирования ООП
-    """
-
-    def register(self, app) -> None:
-        app.on_event("startup")(partial(self.startup, app))
-        app.on_event("shutdown")(partial(self.shutdown, app))
-
-    async def startup(self, app) -> None:
-        raise NotImplementedError
-
-    async def shutdown(self, app) -> None:
-        raise NotImplementedError
+    async def shutdown(self) -> None:
+        pass

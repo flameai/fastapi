@@ -1,8 +1,9 @@
 from typing import Any
 from enum import Enum
-from fastapi import Depends
-
 from common.fastapi.exceptions import NotExistingNoSQLDatabaseSettings, NotExistingRelationalDatabaseSettings
+from common.fastapi.config import Config
+from sqlalchemy.orm import Session
+
 
 class ComponentCategoryEnum(Enum):
     RelationalDB = "RelationalDB"
@@ -10,38 +11,73 @@ class ComponentCategoryEnum(Enum):
     QueueBroker = "QueueBroker"
 
 
-class Registry:
+class ComponentRegistry:
     """
-    Сингтон для хранения ресурсов нужных компонентов (Сессий БД, объекта доступа к NoSQL, к очереди)
-    Используем подобие поттерна ServiceLocator
+    Registry for component getters.
     """
-    REGISTRY = {
-        'components_by_category': {
-            key: None for key in ComponentCategoryEnum
-        }
+
+    EXCEPTION_MAPPING = {
+        ComponentCategoryEnum.RelationalDB: NotExistingRelationalDatabaseSettings,
+        ComponentCategoryEnum.NoSQLDB: NotExistingNoSQLDatabaseSettings
     }
 
+    components_by_category: dict = {
+        key: None for key in ComponentCategoryEnum
+    }
 
-def get_component_by_category(component_category: ComponentCategoryEnum) -> Any:
+    all_components = []
+
+    is_registered = False
+
+    @classmethod
+    def register_all_components_in_registry(cls) -> None:
+        if cls.is_registered:
+            return
+        for component_class in Config.app_component_classes:
+            component_instance = component_class()
+            cls.all_components.append(component_instance)
+            cls.components_by_category[component_class.CATEGORY] = component_instance
+        cls.is_registered = True
+
+    @classmethod
+    def get_exception_for_component_category(cls, component_category: ComponentCategoryEnum):
+        return cls.EXCEPTION_MAPPING[component_category] if component_category in cls.EXCEPTION_MAPPING else Exception(
+            f"Cant get component {component_category.value} from application.")
+
+    @classmethod
+    def get_component_by_category_or_exception(cls, component_category: ComponentCategoryEnum) -> Any:
+        """
+        Returns component. For example DB Session, Redis pool, Rabbit Queue etc
+        """
+
+        cls.register_all_components_in_registry()
+
+        # By the way Morse operator
+        if (component := cls.components_by_category[component_category]) is None:
+            exception = cls.get_exception_for_component_category(component_category)
+            raise exception
+
+        return component
+
+
+def get_db() -> Session:
     """
-    Вернет функцию получения компонента нужной категории
-    с вызовом учетом исключения в случае его отсутствия
+    Shortcut for using in Depends expressions FastAPI
+    :return: Session for sqlalchemy
+    for ex:
+    >>> from common.fastapi.registry import get_db
+    >>> from fastapi import Depends
+    >>> async def my_view(db: Session = Depends(get_db))
+    >>>     async with db() as session:
+    >>>         await session.execute("SELECT 1")
     """
-
-    # Моржовый оператор вашему вниманию ( := )
-    if component := Registry.REGISTRY['components_by_category'][component_category] is None:
-        exception = get_exception_for_component_category(component_category)
-        raise exception
-
-    return component
+    db = ComponentRegistry.get_component_by_category_or_exception(ComponentCategoryEnum.RelationalDB)
+    return db.session
 
 
-exceptions_mapping = {
-    ComponentCategoryEnum.RelationalDB: NotExistingRelationalDatabaseSettings,
-    ComponentCategoryEnum.NoSQLDB: NotExistingNoSQLDatabaseSettings
-}
-
-
-def get_exception_for_component_category(component_category: ComponentCategoryEnum):
-    return exceptions_mapping[component_category] if component_category in exceptions_mapping else Exception(
-        f"Cant get component {component_category.value} from application.")
+def get_nosql_db():
+    """
+    Shortcut for using in Depends for services like Redis, Cassandra etc
+    """
+    nosql_db = ComponentRegistry.get_component_by_category_or_exception(ComponentCategoryEnum.NoSQLDB)
+    return nosql_db.resource

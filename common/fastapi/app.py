@@ -9,25 +9,34 @@ from common.fastapi.settings import (
     APP_HOST,
     APP_WORKERS,
 )
-from common.fastapi.registry import Registry
 from common.fastapi.config import Config
+from common.fastapi.base import AppBaseComponent
 
 
 class App(FastAPI):
     """
-    Класс приложения с настройками общими для всех проектов.
-    При инициализации произойдет регистрация всех компонентов
-    в приложении
+    Application class for all projects in our meta company.
+    Use Config class for customize standard FastAPI app and fullfill registry
+    Using:
+    >>> from common.fastapi.app import App
+    >>> from common.db.mysql.fastapi import MySQL
+    >>> from common.db.redis.fastapi import Redis
+    >>> from common.fastapi.config import Config
+    >>> ...
+    >>> Config.add_app_component_class(MySQL)
+    >>> Config.add_app_component_class(Redis)
+    >>>
+    >>> projectApp = App()
+    >>> projectApp.run()
     """
 
     def __init__(self, *a, **kw) -> None:
 
         super().__init__(*a, **kw)
 
-        if self.Config.components_classes:
-            for component_class in set(self.components_classes):
-                component_instance = component_class()
-                component_instance.register(self)
+        for component_class in set(Config.app_component_classes):
+            component_instance = component_class()
+            component_instance.register_app_hooks(self)
 
     def run(self, app: Optional[str] = None, log_config: Optional[dict] = None) -> None:
         app = app or self

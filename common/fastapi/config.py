@@ -1,26 +1,11 @@
 from typing import Type
-from common.fastapi.base import AppBaseComponent
-
-
-def init_config():
-    Config.init()
-
 
 class Config:
     """
-    Класс-синглтон для настройки нашего приложения
+    Config class for our application. Include all components for rest, gRPC, workers etc.
     """
-
-    is_initialized = False
-    components_classes = []
+    app_component_classes: list[Type['AppBaseComponent']] = []
 
     @classmethod
-    def init(cls):
-        if cls.is_initialized:
-            return
-        for component_class in set(cls.components_classes):
-            component_class()
-
-    @classmethod
-    def add_component_class(cls, component_class: Type[AppBaseComponent]):
-        cls.components_classes.append(component_class)
+    def add_app_component_class(cls, component_class: Type['AppBaseComponent']):
+        cls.app_component_classes.append(component_class)
